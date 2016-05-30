@@ -8,7 +8,6 @@ black = ( 0,  0,  0)
 white = ( 255, 255, 255)
 
 
-
 class Ball(pygame.sprite.Sprite):
     def __init__(self, color,id):
         """Класс описывает шарик и его поведение"""
@@ -47,6 +46,14 @@ class Control(object):
         self.done = False
         self.ball_elements = self.make_ball_elements()
         self.elements_to_deletion = []
+        self.ball_count = 0
+        self.rezult_points = 0
+        self.click_count = 0
+        self.is_target_selected = False
+
+    def get_points(self, killed_balls_count):
+        """Подсчет очков за ход"""
+        return 2**killed_balls_count
 
     def make_ball_elements(self):
         """Создание игрового пространства"""
@@ -83,6 +90,7 @@ class Control(object):
             if item.color == deleted_block.color and item not in self.elements_to_deletion:
                 self.elements_to_deletion.append(item)
                 self.delete_clicked_elements(item)
+
         for elem in self.elements_to_deletion:
             self.ball_elements.remove(elem)
 
@@ -95,7 +103,11 @@ class Control(object):
                 pos = pygame.mouse.get_pos()
                 clicked_sprites = [s for s in self.ball_elements if s.rect.collidepoint(pos)]
                 for item in clicked_sprites:
+                    self.elements_to_deletion = []
                     self.delete_clicked_elements(item)
+                    if  len(self.elements_to_deletion)>0:
+                        self.click_count+=1
+                        self.rezult_points+= self.get_points(len(self.elements_to_deletion))
 
 
     def update(self):
@@ -111,6 +123,11 @@ class Control(object):
         self.ball_elements.draw(self.screen)
 
 
+    def display_fps(self):
+        """Show the programs FPS in the window handle."""
+        caption = "Score - {}, clicks - {}".format(self.rezult_points, self.click_count)
+        pygame.display.set_caption(caption)
+
     def main_loop(self):
         """Основной цикл игры"""
         while not self.done:
@@ -118,7 +135,9 @@ class Control(object):
             self.update()
             self.draw()
             pygame.display.update()
+            self.display_fps()
             self.clock.tick(60)
+
 
 
 if __name__ == "__main__":
